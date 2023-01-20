@@ -1,7 +1,7 @@
 from random import random
 
 class Perceptron:
-	def __init__(self, inputs, learningRate):
+	def __init__(self, inputs, learningRate=0.1):
 		self.input = [0 for i in range(inputs)]
 		self.w = [random() for i in range(inputs + 1)]
 		self.sum = 0

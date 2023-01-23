@@ -1,33 +1,49 @@
+# ©Д.С. Комин, 2023
+
+# Import 
 from Engine import *
 import time
 import random
 
-W = 50
+# Settings
+rocketW = 1
+W = 30
 H = 30
 
+# Output init
 Output.resize(W, H)
 Output.init()
-Input.init(extended = True)
 
+# Input init
+Input.init(extended=True)
+
+# Object initialitaion
 nn = Perceptron(3, 0.01)
 window = Window(W,H)
-
 ball = [random.randint(0, W-1), 0]
+balls = [[random.randint(0, W-1), 0],[random.randint(0, W-1), 0]]
 racket = [int(W/3), H - 1]
 
-rocketW = 1
-y=0
+# Sys vars
+y = 0
 score = 0
 force = False
-
 enterPrevState = False
 escPrevState = False
+
+# Main loop
 while True:
+    if not force:
+        time.sleep(0.1)
+        Output.title(str(score))
+    
     Input.tick()
+    
     for event in Input.getEvents():
         if event.type == Input.Types.Keyboard:
             if event.keyboardCode == Input.Keyboard.Keys.SPACE:
                 force = event.keyboardState == Input.Keyboard.DOWN
+
             if event.keyboardCode == Input.Keyboard.Keys.ENTER:
                 if event.keyboardState == Input.Keyboard.DOWN:
                     if enterPrevState != True:
@@ -46,42 +62,43 @@ while True:
                         for i in range(len(nn.w)):
                             nn.w[i] = float(weights[i])
                 escPrevState = event.keyboardState == Input.Keyboard.DOWN
-                  
-    Output.title(str(score))
-    if not force:
-        time.sleep(0.1)
     
-    window.fill(" ")
-    window.point(ball[0], ball[1])
-    
-    res = nn.predict([ball[0] / W, ball[1] / H, racket[0] / W])
+    res = nn.predict([balls[0][0] / W, balls[0][1] / H, racket[0] / W])
     
     prevRacket = racket
     if res > 0.5:
         if racket[0] + rocketW < W:
             racket[0] += 1
         
-    elif res < 0.5:
+    else:
         if racket[0] > 0:
             racket[0] += -1
     
     y += 1
-    ball[1] += y%2
-    
-    if ball[1] == racket[1]:
-        ball[1] = 0
+    balls[0][1] += y % 2
+    balls[1][1] += y % 2
+
+    if balls[0][1] == racket[1]:
+        balls[0][1] = 0
         
-        if racket[0] <= ball[0] <= racket[0] + rocketW:
-            nn.learnNoLearer(0)
+        if racket[0] <= balls[0][0] <= racket[0] + rocketW:
             score += 1
         else:
-            if racket[0] + rocketW < ball[0]:
+            if racket[0] + rocketW < balls[0][0]:
                 nn.learnNoLearer(1)
                 
-            elif racket[0] > ball[0]:
+            elif racket[0] > balls[0][0]:
                 nn.learnNoLearer(-1)
-                
-        ball[0] = random.randint(0, W-1)
-            
-    window.rect(racket[0], racket[1], rocketW, 1)
-    window.draw()
+        
+        balls[1][1] = H // 2
+        balls[0][0] = balls[1][0]
+        balls[0][1] = balls[1][1]
+        balls[1] = [random.randint(0, W-1), 0]
+
+    if not force:
+        window.fill(" ")
+        window.point(balls[0][0], balls[0][1])
+        window.point(balls[1][0], balls[1][1])
+
+        window.rect(racket[0], racket[1], rocketW, 1)
+        window.draw()

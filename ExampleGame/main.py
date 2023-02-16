@@ -1,9 +1,8 @@
-# ©Д.С. Комин, 2023
-
 # Import 
 from Engine import *
 import time
 import random
+from Perceptron import Perceptron
 
 # Settings
 rocketW = 1
@@ -39,29 +38,28 @@ while True:
     
     Input.tick()
     
-    for event in Input.getEvents():
-        if event.type == Input.Types.Keyboard:
-            if event.keyboardCode == Input.Keyboard.Keys.SPACE:
-                force = event.keyboardState == Input.Keyboard.DOWN
+    if Input.eventType == Input.Types.Keyboard:
+        if Input.keyboardCode == Input.Keyboard.Keys.SPACE:
+            force = Input.keyboardState == Input.Keyboard.DOWN
 
-            if event.keyboardCode == Input.Keyboard.Keys.ENTER:
-                if event.keyboardState == Input.Keyboard.DOWN:
-                    if enterPrevState != True:
-                        file = open("nn.w", "w")
-                        out = ""
-                        for w in nn.w:
-                            out += str(w) + "\n"
-                        file.write(out)
-                        file.close()
-                enterPrevState = (event.keyboardState == Input.Keyboard.DOWN)
-                    
-            if event.keyboardCode == Input.Keyboard.Keys.ESC:
-                if event.keyboardState == Input.Keyboard.DOWN:
-                    if escPrevState != True:
-                        weights = open("nn.w", "r").read().split("\n")
-                        for i in range(len(nn.w)):
-                            nn.w[i] = float(weights[i])
-                escPrevState = event.keyboardState == Input.Keyboard.DOWN
+        if Input.keyboardCode == Input.Keyboard.Keys.ENTER:
+            if Input.keyboardState == Input.Keyboard.DOWN:
+                if enterPrevState != True:
+                    file = open("nn.w", "w")
+                    out = ""
+                    for w in nn.w:
+                        out += str(w) + "\n"
+                    file.write(out)
+                    file.close()
+            enterPrevState = (Input.keyboardState == Input.Keyboard.DOWN)
+                
+        if Input.keyboardCode == Input.Keyboard.Keys.ESC:
+            if Input.keyboardState == Input.Keyboard.DOWN:
+                if escPrevState != True:
+                    weights = open("nn.w", "r").read().split("\n")
+                    for i in range(len(nn.w)):
+                        nn.w[i] = float(weights[i])
+            escPrevState = Input.keyboardState == Input.Keyboard.DOWN
     
     res = nn.predict([balls[0][0] / W, balls[0][1] / H, racket[0] / W])
     
@@ -96,7 +94,7 @@ while True:
         balls[1] = [random.randint(0, W-1), 0]
 
     if not force:
-        window.fill(" ")
+        window.fill()
         window.point(balls[0][0], balls[0][1])
         window.point(balls[1][0], balls[1][1])
 

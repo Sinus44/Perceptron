@@ -1,5 +1,5 @@
 # __EXAMPLEGAME__
-Простенькая игра в которую играет нейрон (нейросеть)
+Простенькая игра в которую играет всего 1 нейрон
 
 # Суть:
 * Нейросеть должна научиться ловить снежинки
@@ -9,5 +9,6 @@
 * ENTER - Сохранение весов нейросети
 * ESC - Загрузка весов нейросети
 
-# BASED ON CONSOLE ENGINE
-Last stable version of console engine - v8
+# BASED ON
+* CONSOLE-ENGINE: v9.2.1
+* PERCEPTRON: v1.0.0

@@ -1,102 +1,108 @@
-# Import 
 from Engine import *
 import time
 import random
 from Perceptron import Perceptron
 
-# Settings
-rocketW = 1
-W = 30
-H = 30
+class Game_Scene(Scene):
+	def select(self):
+		# Settings
+		self.rocketW = 4
 
-# Output init
-Output.resize(W, H)
-Output.init()
+		# Object initialitaion
+		self.nn = Perceptron(3, 0.01)
+		self.ball = [random.randint(0, self.window.w - 1), 0]
+		self.balls = [[random.randint(0, self.window.w - 1), 0], [random.randint(0, self.window.w - 1), 0]]
+		self.racket = [self.window.w // 3, self.window.h - 1]
 
-# Input init
-Input.init(extended=True)
+		# Sys vars
+		self.y = 0
+		self.score = 0
+		self.force = False
+		self.enterPrevState = False
+		self.escPrevState = False
 
-# Object initialitaion
-nn = Perceptron(3, 0.01)
-window = Window(W,H)
-ball = [random.randint(0, W-1), 0]
-balls = [[random.randint(0, W-1), 0],[random.randint(0, W-1), 0]]
-racket = [int(W/3), H - 1]
+	def update(self):
+		self.res = self.nn.predict([self.balls[0][0] / self.window.w, self.balls[0][1] / self.window.h, self.racket[0] / self.window.w])
+		
+		if self.res > 0.5:
+			if self.racket[0] + self.rocketW < self.window.w:
+				self.racket[0] += 1
+			
+		else:
+			if self.racket[0] > 0:
+				self.racket[0] += -1
+		
+		self.y += 1
+		self.balls[0][1] += self.y % 2
+		self.balls[1][1] += self.y % 2
 
-# Sys vars
-y = 0
-score = 0
-force = False
-enterPrevState = False
-escPrevState = False
+		if self.balls[0][1] == self.racket[1]:
+			self.balls[0][1] = 0
+			
+			if self.racket[0] <= self.balls[0][0] <= self.racket[0] + self.rocketW:
+				self.score += 1
+			else:
+				if self.racket[0] + self.rocketW < self.balls[0][0]:
+					self.nn.learnNoLearer(1)
+					
+				elif self.racket[0] > self.balls[0][0]:
+					self.nn.learnNoLearer(-1)
+			
+			self.balls[1][1] = self.window.h // 2
+			self.balls[0][0] = self.balls[1][0]
+			self.balls[0][1] = self.balls[1][1]
+			self.balls[1] = [random.randint(0, self.window.w - 1), 0]
 
-# Main loop
-while True:
-    if not force:
-        time.sleep(0.1)
-        Output.title(str(score))
-    
-    Input.tick()
-    
-    if Input.eventType == Input.Types.Keyboard:
-        if Input.keyboardCode == Input.Keyboard.Keys.SPACE:
-            force = Input.keyboardState == Input.Keyboard.DOWN
+	def draw(self):
+		for event in self.window.input_tick():
+			if event["type"] == "exit":
+				self.window.close()
+				quit()
 
-        if Input.keyboardCode == Input.Keyboard.Keys.ENTER:
-            if Input.keyboardState == Input.Keyboard.DOWN:
-                if enterPrevState != True:
-                    file = open("nn.w", "w")
-                    out = ""
-                    for w in nn.w:
-                        out += str(w) + "\n"
-                    file.write(out)
-                    file.close()
-            enterPrevState = (Input.keyboardState == Input.Keyboard.DOWN)
-                
-        if Input.keyboardCode == Input.Keyboard.Keys.ESC:
-            if Input.keyboardState == Input.Keyboard.DOWN:
-                if escPrevState != True:
-                    weights = open("nn.w", "r").read().split("\n")
-                    for i in range(len(nn.w)):
-                        nn.w[i] = float(weights[i])
-            escPrevState = Input.keyboardState == Input.Keyboard.DOWN
-    
-    res = nn.predict([balls[0][0] / W, balls[0][1] / H, racket[0] / W])
-    
-    prevRacket = racket
-    if res > 0.5:
-        if racket[0] + rocketW < W:
-            racket[0] += 1
-        
-    else:
-        if racket[0] > 0:
-            racket[0] += -1
-    
-    y += 1
-    balls[0][1] += y % 2
-    balls[1][1] += y % 2
+			if event["type"] == "keyboard":
+				if event["key_code"] == 13:
+					if event["key_state"] == 1:
+						if self.enterPrevState == 0:
+							with open("nn.w", "w") as file:
+								out = ""
+								for w in self.nn.w:
+									out += str(w) + "\n"
+								file.write(out)
+					self.enterPrevState = event["key_state"]
 
-    if balls[0][1] == racket[1]:
-        balls[0][1] = 0
-        
-        if racket[0] <= balls[0][0] <= racket[0] + rocketW:
-            score += 1
-        else:
-            if racket[0] + rocketW < balls[0][0]:
-                nn.learnNoLearer(1)
-                
-            elif racket[0] > balls[0][0]:
-                nn.learnNoLearer(-1)
-        
-        balls[1][1] = H // 2
-        balls[0][0] = balls[1][0]
-        balls[0][1] = balls[1][1]
-        balls[1] = [random.randint(0, W-1), 0]
+				elif event["key_code"] == 27:
+					if event["key_state"] == 1:
+						if self.escPrevState == 0:
+							weights = open("nn.w", "r").read().split("\n")
+							for i in range(len(self.nn.w)):
+								self.nn.w[i] = float(weights[i])
+					self.escPrevState = event["key_state"]
 
-    if not force:
-        window.fill()
-        window.point(balls[0][0], balls[0][1])
-        window.point(balls[1][0], balls[1][1])
+		self.window.set_title(str(self.score))
+		self.window.fill()
+		self.window.point(self.balls[0][0], self.balls[0][1], Symbol(char="*"))
+		self.window.point(self.balls[1][0], self.balls[1][1], Symbol(char="*"))
 
-        window.rect(racket[0], racket[1], rocketW, 1)
-        window.draw()
+		self.window.rect(self.racket[0], self.racket[1], self.rocketW, 1, Symbol(char="-"))
+		self.window.print()
+
+class Game:
+	def __init__(self, width, height):
+		self.width = width
+		self.height = height
+
+		self.window = Window(self.width, self.height)
+		self.window.set_title("Neuron example")
+
+		self.scene_control = Scene_Control(update_time=0.1, frame_time=0.1)
+		self.scene_control.add("game", Game_Scene(window=self.window, app=self))
+		self.scene_control.set('game')
+
+	def run(self):
+		self.scene_control.play()
+
+
+if __name__ == "__main__":
+
+	game = Game(30, 30)
+	game.run()

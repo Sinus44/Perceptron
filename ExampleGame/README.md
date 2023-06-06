@@ -10,5 +10,5 @@
 * ESC - Загрузка весов нейросети
 
 # BASED ON
-* CONSOLE-ENGINE: v9.2.1
+* CONSOLE-ENGINE: v9.5.0
 * PERCEPTRON: v1.0.0
